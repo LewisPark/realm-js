@@ -35,10 +35,10 @@ module.exports = {
 };
 
 // Listen for event to run a particular test.
-NativeAppEventEmitter.addListener('realm-run-test', (test) => {
+NativeAppEventEmitter.addListener('realm-run-test', async ({suite, name}) => {
     let error;
     try {
-        RealmTests.runTest(test.suite, test.name);
+        await RealmTests.runTest(suite, name);
     } catch (e) {
         error = '' + e;
     }
@@ -51,17 +51,17 @@ setTimeout(() => {
     NativeModules.Realm.emit('realm-test-names', RealmTests.getTestNames());
 }, 0);
 
-function runTests() {
+async function runTests() {
     let testNames = RealmTests.getTestNames();
 
     for (let suiteName in testNames) {
         console.log('Starting ' + suiteName);
 
         for (let testName of testNames[suiteName]) {
-            RealmTests.runTest(suiteName, 'beforeEach');
+            await RealmTests.runTest(suiteName, 'beforeEach');
 
             try {
-                RealmTests.runTest(suiteName, testName);
+                await RealmTests.runTest(suiteName, testName);
                 console.log('+ ' + testName);
             }
             catch (e) {
@@ -69,7 +69,7 @@ function runTests() {
                 console.warn(e.message);
             }
             finally {
-                RealmTests.runTest(suiteName, 'afterEach');
+                await RealmTests.runTest(suiteName, 'afterEach');
             }
         }
     }

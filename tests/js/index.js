@@ -58,7 +58,7 @@ exports.runTest = function(suiteName, testName) {
     var testMethod = testSuite && testSuite[testName];
 
     if (testMethod) {
-        testMethod.call(testSuite);
+        return testMethod.call(testSuite);
     } else if (!testSuite || !(testName in SPECIAL_METHODS)) {
         throw new Error('Missing test: ' + suiteName + '.' + testName);
     }
