@@ -18,21 +18,13 @@
 
 'use strict';
 
-const React = require('react-native');
-const RealmTests = require('realm-tests');
+import { NativeAppEventEmitter, NativeModules } from 'react-native';
+import * as RealmTests from 'realm-tests';
+import ListViewTest from './listview-test';
 
 RealmTests.registerTests({
-    ListViewTest: require('./listview-test'),
+    ListViewTest,
 });
-
-const {
-    NativeAppEventEmitter,
-    NativeModules,
-} = React;
-
-module.exports = {
-    runTests,
-};
 
 // Listen for event to run a particular test.
 NativeAppEventEmitter.addListener('realm-run-test', async ({suite, name}) => {
@@ -48,29 +40,41 @@ NativeAppEventEmitter.addListener('realm-run-test', async ({suite, name}) => {
 
 // Inform the native test harness about the test suite once it's ready.
 setTimeout(() => {
-    NativeModules.Realm.emit('realm-test-names', RealmTests.getTestNames());
+    // The emit() method only exists on iOS, for now.
+    if (NativeModules.Realm.emit) {
+        NativeModules.Realm.emit('realm-test-names', getTestNames());
+    }
 }, 0);
 
-async function runTests() {
-    let testNames = RealmTests.getTestNames();
+export function getTestNames() {
+    return RealmTests.getTestNames();
+}
+
+export async function runTests() {
+    let testNames = getTestNames();
 
     for (let suiteName in testNames) {
         console.log('Starting ' + suiteName);
 
         for (let testName of testNames[suiteName]) {
-            await RealmTests.runTest(suiteName, 'beforeEach');
-
-            try {
-                await RealmTests.runTest(suiteName, testName);
-                console.log('+ ' + testName);
-            }
-            catch (e) {
-                console.warn('- ' + testName);
-                console.warn(e.message);
-            }
-            finally {
-                await RealmTests.runTest(suiteName, 'afterEach');
-            }
+            await runTest(suiteName, testName);
         }
+    }
+}
+
+export async function runTest(suiteName, testName) {
+    await RealmTests.runTest(suiteName, 'beforeEach');
+
+    try {
+        await RealmTests.runTest(suiteName, testName);
+        console.log('+ ' + testName);
+    }
+    catch (e) {
+        console.warn('- ' + testName);
+        console.warn(e.message || e);
+        throw e;
+    }
+    finally {
+        await RealmTests.runTest(suiteName, 'afterEach');
     }
 }
