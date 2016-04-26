@@ -149,7 +149,7 @@ module.exports = BaseTest.extend({
         var defaultPath = Realm.defaultPath;
         var defaultRealm = new Realm({schema: []});
         TestCase.assertEqual(defaultRealm.path, Realm.defaultPath);
- 
+
         try {
             var newPath = Realm.defaultPath.substring(0, defaultPath.lastIndexOf('/') + 1) + 'default2.realm';
             Realm.defaultPath = newPath;
